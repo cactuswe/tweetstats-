@@ -16,7 +16,7 @@ client = tweepy.Client(
 )
 
 # Användarinfo
-user = client.get_user(username="DITT_ANVÄNDARNAMN")
+user = client.get_user(username="promptpdfmaster")
 user_id = user.data.id
 
 # Hämta senaste 100 tweets
