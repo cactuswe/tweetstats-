@@ -1,53 +1,33 @@
-import os
-import tweepy
+import snscrape.modules.twitter as sntwitter
 import pandas as pd
 import streamlit as st
-from dotenv import load_dotenv
 
-load_dotenv()
+# Byt till ditt faktiska användarnamn
+username = "ditt_användarnamn"  # ex: "noahcreates"
 
-# Autentisering
-client = tweepy.Client(
-    consumer_key = 'C1V4vht8gXiYocrdGeL3wH6eP',
-    consumer_secret = '6DR60sxa4brZZIbbhZNclETojVNk3ttYoUxT3E4TyXCW05M0jD',
-    access_token = '1945544864776548352-RBCtzcnDGvZEmFrxGkc7BJq4igBr9e',
-    access_token_secret = 'ey0z9xHP87dUJdyjHfUtKq3g1xcPExznqS2xB7ZCHKZG4',
-    wait_on_rate_limit=True
-)
-
-# Användarinfo
-user = client.get_user(username="promptpdfmaster")
-user_id = user.data.id
-
-# Hämta senaste 100 tweets
-tweets = client.get_users_tweets(
-    id=user_id,
-    tweet_fields=["public_metrics", "created_at", "text"],
-    max_results=100
-)
-
-# Extrahera statistik
-data = []
-for t in tweets.data:
-    metrics = t.public_metrics
-    data.append({
-        "Text": t.text[:80] + "..." if len(t.text) > 80 else t.text,
-        "Datum": t.created_at.strftime("%Y-%m-%d"),
-        "Impressions": metrics.get("impression_count", 0),
-        "Retweets": metrics["retweet_count"],
-        "Likes": metrics["like_count"],
-        "Replies": metrics["reply_count"],
-        "Tweet ID": t.id
+# Hämta de senaste 100 tweetsen
+tweets = []
+for i, tweet in enumerate(sntwitter.TwitterUserScraper(username).get_items()):
+    if i >= 100:
+        break
+    tweets.append({
+        "Text": tweet.content[:100] + "..." if len(tweet.content) > 100 else tweet.content,
+        "Datum": tweet.date.strftime("%Y-%m-%d"),
+        "Impressions": tweet.viewCount,
+        "Likes": tweet.likeCount,
+        "Retweets": tweet.retweetCount,
+        "Replies": tweet.replyCount,
+        "Tweet URL": f"https://twitter.com/{username}/status/{tweet.id}"
     })
 
-df = pd.DataFrame(data)
+df = pd.DataFrame(tweets)
+
+# Sortera efter impressions
 df = df.sort_values(by="Impressions", ascending=False)
 
 # === Streamlit UI ===
-st.title("📊 Twitter-statistik för dina produkter")
-st.write(f"Visar senaste {len(df)} tweets från @{user.data.username}")
+st.set_page_config(page_title="Twitter Stats", layout="wide")
+st.title("📈 Twitter-statistik från scraping")
+st.write(f"Visar senaste {len(df)} tweets från @{username}")
 
 st.dataframe(df, use_container_width=True)
-
-st.markdown("---")
-st.markdown("Tips: klicka på en Tweet ID för att öppna den manuellt.")
