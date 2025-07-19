@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 
 # Byt till ditt faktiska användarnamn
-username = "ditt_användarnamn"  # ex: "noahcreates"
+username = "promptpdfmaster"  # ex: "noahcreates"
 
 # Hämta de senaste 100 tweetsen
 tweets = []
